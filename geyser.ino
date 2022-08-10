@@ -123,6 +123,7 @@ uint8_t uart_buffer_[TUYA_BUFFER_LEN] {0};
 bool readCommand();
 void writeCommand(TuyaCommandType command, const uint8_t *value, uint16_t length);
 uint8_t checksum();
+bool wifiConnected = false;
 
 void setup() {
   Serial.begin(9600);
@@ -135,6 +136,14 @@ void setup() {
 
 void loop() {
   digitalWrite(LED_BUILTIN, HIGH);
+
+  if (WiFi.status() == WL_CONNECTED && !wifiConnected) {
+    writeCommand(TUYA_NETWORK_STATUS, network_connection_mode_connected, sizeof(network_connection_mode_connected));
+
+    wifiConnected = true;
+  } else if (WiFi.status() != WL_CONNECTED) {
+    wifiConnected = false;
+  }
 
   reconnectMqtt();
 
@@ -170,7 +179,7 @@ void loop() {
     Serial.println("HEARTBEAT_RESPONSE:");
     Serial.println((command_.value[0] == 0) ? "FIRST_HEARTBEAT" : "HEARTBEAT");
 
-  } else if (haveMessage && command_.command == TUYA_RESPONSE)
+  } else if (haveMessage && command_.command == TUYA_RESPONSE && command_.length == 90)
   {
     gotMCUResponse = true;
     setAndPublishGeyserData(command_.value);
@@ -374,10 +383,6 @@ void setupWifiManager()
 
   Serial.println("local ip");
   Serial.println(WiFi.localIP());
-
-  if (WiFi.status() == WL_CONNECTED) {
-    writeCommand(TUYA_NETWORK_STATUS, network_connection_mode_connected, sizeof(network_connection_mode_connected));
-  }
 }
 
 void saveConfigFile()
