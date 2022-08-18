@@ -11,6 +11,8 @@ char mqtt_server[20] = "";
 char mqtt_port[10] = "1883";
 char mqtt_user[50] = "admin";
 char mqtt_pass[50] = "";
+#define temp_topic "stat/geyser/TEMP"
+#define collector_temp_topic "stat/geyser/COLLECTOR"
 #define geyser_topic    "stat/geyser/RESULT"
 #define heat_topic    "stat/geyser/POWER"
 #define away_topic    "stat/geyser/AWAY"
@@ -91,7 +93,6 @@ static uint8_t network_connection_mode_disconnected[] = NETWORK_CONNECTION_MODE_
 #define HEARTBEAT_INTERVAL_MS 10000
 unsigned long previousHeartbeatMillis = 0;
 
-
 #define QUERY_INTERVAL_MS 1000
 unsigned long previousQueryMillis = 0;
 
@@ -124,6 +125,11 @@ bool readCommand();
 void writeCommand(TuyaCommandType command, const uint8_t *value, uint16_t length);
 uint8_t checksum();
 bool wifiConnected = false;
+
+//Safe guard for the temp drops in graphs.
+uint8_t previousGeyserTemp = 0;
+uint8_t previousCollectorTemp = 0;
+char checksumStore;
 
 void setup() {
   Serial.begin(9600);
@@ -182,7 +188,14 @@ void loop() {
   } else if (haveMessage && command_.command == TUYA_RESPONSE && command_.length == 90)
   {
     gotMCUResponse = true;
-    setAndPublishGeyserData(command_.value);
+
+    if (checksumStore != command_.checksum) {
+      setAndPublishGeyserData(command_.value);
+
+      publishGeyserTemps(command_.value);
+
+      checksumStore = command_.checksum;
+    }
   } else if (haveMessage && (command_.command == TUYA_PAIRING_MODE || command_.command == TUYA_PAIRING_MODE_OPTION))
   {
     wifiManager.resetSettings();
@@ -460,13 +473,11 @@ bool loadConfigFile()
   return false;
 }
 
-char checksumStore;
+
 void setAndPublishGeyserData(const uint8_t *geyserValues)
 {
   heating = geyserValues[4];
   activeMode = geyserValues[9];
-  geyserTemp = geyserValues[17];
-  collectorTemp = geyserValues[89];
   geyserErrorCode = errorCode(geyserValues[28]);
   solarDiffTemp = geyserValues[41];
   antiFreezeTemp = geyserValues[81];
@@ -475,27 +486,45 @@ void setAndPublishGeyserData(const uint8_t *geyserValues)
   block3 = geyserValues[65];
   block4 = geyserValues[73];
 
-  //Check for the checksum change so that we only push data to mqtt when it changes.
-  if (checksumStore != command_.checksum && geyserTemp > 0) {
-    StaticJsonDocument<200> doc;
-    doc["geyser_temp"] = geyserTemp;
-    doc["collector_temp"] = collectorTemp;
-    doc["error"] = geyserErrorCode;
-    doc["solar_diff_temp"] = solarDiffTemp;
-    doc["anti_freeze_temp"] = antiFreezeTemp;
-    doc["block1_temp"] = block1;
-    doc["block2_temp"] = block2;
-    doc["block3_temp"] = block3;
-    doc["block4_temp"] = block4;
+  StaticJsonDocument<200> doc;
+  doc["error"] = geyserErrorCode;
+  doc["solar_diff_temp"] = solarDiffTemp;
+  doc["anti_freeze_temp"] = antiFreezeTemp;
+  doc["block1_temp"] = block1;
+  doc["block2_temp"] = block2;
+  doc["block3_temp"] = block3;
+  doc["block4_temp"] = block4;
 
-    char buffer[256];
-    size_t n = serializeJson(doc, buffer);
+  char buffer[256];
+  size_t n = serializeJson(doc, buffer);
 
-    client.publish(geyser_topic, buffer, n);
-    client.publish(heat_topic, heating ? "ON" : "OFF");
-    client.publish(away_topic, activeMode ? "OFF" : "ON");
+  client.publish(geyser_topic, buffer, n);
+  client.publish(heat_topic, heating ? "ON" : "OFF");
+  client.publish(away_topic, activeMode ? "OFF" : "ON");
+}
 
-    checksumStore = command_.checksum;
+void publishGeyserTemps(const uint8_t *geyserValues)
+{
+  geyserTemp = geyserValues[17];
+  if ((previousGeyserTemp - geyserTemp) < 5) {
+    char tempAsString[32] = {0};
+    snprintf(tempAsString, sizeof(tempAsString), "%d", geyserTemp);
+    client.publish(temp_topic, tempAsString);
+  }
+
+  if (previousGeyserTemp != geyserTemp) {
+    previousGeyserTemp = geyserTemp;
+  }
+
+  collectorTemp = geyserValues[89];
+  if ((previousCollectorTemp - collectorTemp) < 3) {
+    char collectorTempAsString[32] = {0};
+    snprintf(collectorTempAsString, sizeof(collectorTempAsString), "%d", collectorTemp);
+    client.publish(collector_temp_topic, collectorTempAsString);
+  }
+
+  if (previousCollectorTemp != collectorTemp) {
+    previousCollectorTemp = collectorTemp;
   }
 }
 
