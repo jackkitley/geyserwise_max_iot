@@ -96,6 +96,9 @@ unsigned long previousHeartbeatMillis = 0;
 #define QUERY_INTERVAL_MS 1000
 unsigned long previousQueryMillis = 0;
 
+#define WIFI_CHECK_INTERVAL_MS 120000
+unsigned long previousWifiCheckMillis = 0;
+
 struct TuyaCommand
 {
   uint16_t header;
@@ -124,7 +127,6 @@ uint8_t uart_buffer_[TUYA_BUFFER_LEN] {0};
 bool readCommand();
 void writeCommand(TuyaCommandType command, const uint8_t *value, uint16_t length);
 uint8_t checksum();
-bool wifiConnected = false;
 
 //Safe guard for the temp drops in graphs.
 uint8_t previousGeyserTemp = 0;
@@ -143,13 +145,7 @@ void setup() {
 void loop() {
   digitalWrite(LED_BUILTIN, HIGH);
 
-  if (WiFi.status() == WL_CONNECTED && !wifiConnected) {
-    writeCommand(TUYA_NETWORK_STATUS, network_connection_mode_connected, sizeof(network_connection_mode_connected));
-
-    wifiConnected = true;
-  } else if (WiFi.status() != WL_CONNECTED) {
-    wifiConnected = false;
-  }
+  isWifiConnected();
 
   reconnectMqtt();
 
@@ -348,6 +344,20 @@ String errorCode(int error) {
   }
 }
 
+void isWifiConnected() {
+  unsigned long currentWifiCheckMillis = millis();
+  if (currentWifiCheckMillis - previousWifiCheckMillis >= WIFI_CHECK_INTERVAL_MS)
+  {
+    if (WiFi.status() == WL_CONNECTED) {
+      writeCommand(TUYA_NETWORK_STATUS, network_connection_mode_connected, sizeof(network_connection_mode_connected));
+    } else {
+      writeCommand(TUYA_NETWORK_STATUS, network_connection_mode_disconnected, sizeof(network_connection_mode_disconnected));
+    }
+
+    previousWifiCheckMillis += WIFI_CHECK_INTERVAL_MS;
+  }
+}
+
 void setupWifiManager()
 {
   wifiManager.setDarkMode(true);
@@ -506,7 +516,7 @@ void setAndPublishGeyserData(const uint8_t *geyserValues)
 void publishGeyserTemps(const uint8_t *geyserValues)
 {
   geyserTemp = geyserValues[17];
-  if ((previousGeyserTemp - geyserTemp) < 5) {
+  if ((previousGeyserTemp - geyserTemp) < 3) {
     char tempAsString[32] = {0};
     snprintf(tempAsString, sizeof(tempAsString), "%d", geyserTemp);
     client.publish(temp_topic, tempAsString);
