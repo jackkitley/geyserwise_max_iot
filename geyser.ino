@@ -11,6 +11,7 @@ char mqtt_server[20] = "";
 char mqtt_port[10] = "1883";
 char mqtt_user[50] = "admin";
 char mqtt_pass[50] = "";
+#define pump_topic "stat/geyser/PUMP"
 #define temp_topic "stat/geyser/TEMP"
 #define collector_temp_topic "stat/geyser/COLLECTOR"
 #define geyser_topic    "stat/geyser/RESULT"
@@ -60,6 +61,7 @@ void saveConfigCallback () {
 #define BLOCK_3 { 0x69, 0x02, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00} //+ 1 byte (0x00)
 #define BLOCK_4 { 0x6a, 0x02, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00} //+ 1 byte (0x00)
 
+uint8_t pump = 0;
 uint8_t heating = 0;
 uint8_t activeMode = 0;
 uint8_t geyserTemp = 0;
@@ -486,6 +488,7 @@ bool loadConfigFile()
 
 void setAndPublishGeyserData(const uint8_t *geyserValues)
 {
+  pump = geyserValues[33];
   heating = geyserValues[4];
   activeMode = geyserValues[9];
   geyserErrorCode = errorCode(geyserValues[28]);
@@ -495,6 +498,7 @@ void setAndPublishGeyserData(const uint8_t *geyserValues)
   block2 = geyserValues[57];
   block3 = geyserValues[65];
   block4 = geyserValues[73];
+
 
   StaticJsonDocument<200> doc;
   doc["error"] = geyserErrorCode;
@@ -511,6 +515,7 @@ void setAndPublishGeyserData(const uint8_t *geyserValues)
   client.publish(geyser_topic, buffer, n);
   client.publish(heat_topic, heating ? "ON" : "OFF");
   client.publish(away_topic, activeMode ? "OFF" : "ON");
+  client.publish(pump_topic, pump ? "ON" : "OFF");
 }
 
 void publishGeyserTemps(const uint8_t *geyserValues)
