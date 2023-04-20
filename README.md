@@ -48,6 +48,8 @@ Be sure to merge it with your existing MQTT configuration if you have.
 
 [home assistant/configuration.yaml](home%20assistant/configuration.yaml)
 
+![MQTT Climate Integration](./home%20assistant/mqtt_climate_integration.png)
+
 ### Lovelace Dashboard
 
 The example dashboard makes use of the [mushroom cards](https://github.com/piitaya/lovelace-mushroom), be sure to install that if you would like to make use of it. Also available through [HACS](https://hacs.xyz/)
