@@ -6,7 +6,7 @@ Use the latest firmware from the [firmware](./firmware/) directory. A simple way
 
 And then desoldering it from the D1 mini using a hot air station. Before transplanting it to the display board.
 ## Example replacement
-**Care!!** you want to use a hot air station if you can to remove the old chip. The ESP12 is a drop-in replacement for the chip it ships with.
+**Care!!** you want to use a hot air station if you can to remove the old chip. The ESP-12F/ESP8266MOD is a drop-in replacement for the chip it ships with.
 
 You can also use a Wemos D1 mini to burn the firmware, then transplant the chip to this PCB.
 
