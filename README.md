@@ -52,5 +52,5 @@ Be sure to merge it with your existing MQTT configuration if you have.
 
 The example dashboard makes use of the [mushroom cards](https://github.com/piitaya/lovelace-mushroom), be sure to install that if you would like to make use of it. Also available through [HACS](https://hacs.xyz/)
 
-[home assistant/lovelace_dashboard.yml](home%20assistant/lovelace_dashboard.yml)
-![Lovelace Dashboard](/home%20assistant/lovelace_dashboard.png)
+[home assistant/lovelace_dashboard.yaml](home%20assistant/lovelace_dashboard.yaml)
+![Lovelace Dashboard](./home%20assistant/lovelace_dashboard.png)
