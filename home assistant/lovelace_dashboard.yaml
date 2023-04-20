@@ -1,0 +1,80 @@
+
+cards:
+  - type: vertical-stack
+    cards:
+      - type: custom:mushroom-climate-card
+        entity: climate.geyserwise_max
+        fill_container: false
+        show_temperature_control: false
+        hvac_modes:
+          - heat
+          - 'off'
+        collapsible_controls: false
+        icon: mdi:water-boiler
+        name: Geyser
+        primary_info: name
+        secondary_info: state
+        icon_type: icon
+        tap_action:
+          action: toggle
+        hold_action:
+          action: more-info
+        double_tap_action:
+          action: none
+        layout: horizontal
+      - type: history-graph
+        entities:
+          - entity: climate.geyserwise_max
+          - entity: sensor.geyserwise_max_collector_temperature
+        hours_to_show: 16
+  - type: vertical-stack
+    cards:
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-template-card
+            primary: '{{states("select.geyserwise_max_anti_freeze_temperature")}}°C'
+            secondary: Anti Freeze
+            icon: mdi:snowflake-thermometer
+            entity: select.geyserwise_max_anti_freeze_temperature
+            fill_container: true
+            multiline_secondary: false
+            tap_action:
+              action: more-info
+            hold_action:
+              action: none
+            double_tap_action:
+              action: none
+            layout: horizontal
+          - type: custom:mushroom-template-card
+            primary: '{{states("select.geyserwise_max_solar_diff")}}°C'
+            secondary: Solar Diff
+            icon: mdi:solar-panel-large
+            entity: select.geyserwise_max_solar_diff
+            fill_container: true
+            layout: horizontal
+      - type: vertical-stack
+        cards:
+          - type: entity
+            entity: select.geyserwise_max_block_1_temperature
+            icon: mdi:thermometer
+            name: Block 1
+            state_color: false
+            unit: °C
+          - type: entity
+            entity: select.geyserwise_max_block_2_temperature
+            icon: mdi:thermometer
+            name: Block 2
+            state_color: false
+            unit: °C
+          - type: entity
+            entity: select.geyserwise_max_block_3_temperature
+            icon: mdi:thermometer
+            name: Block 3
+            state_color: false
+            unit: °C
+          - type: entity
+            entity: select.geyserwise_max_block_4_temperature
+            icon: mdi:thermometer
+            name: Block 4
+            state_color: false
+            unit: °C
