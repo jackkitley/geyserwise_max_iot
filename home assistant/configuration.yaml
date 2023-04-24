@@ -1,0 +1,156 @@
+mqtt:
+  sensor:
+    - name: "GeyserWise Max - Collector Temperature"
+      state_topic: "stat/geyser/COLLECTOR"
+      suggested_display_precision: 1
+      unit_of_measurement: "C"
+      unique_id: "cdf9da36-f6d5-4b2a-9bc0-3968f378d56e"
+
+  select:
+    - name: "GeyserWise Max - Block 1 Temperature"
+      command_topic: "cmnd/geyser/block1"
+      command_template: "{{ value | int}}"
+      options:
+        - "30"
+        - "35"
+        - "40"
+        - "45"
+        - "50"
+        - "55"
+        - "60"
+        - "65"
+      state_topic: "stat/geyser/RESULT"
+      value_template: "{{ value_json.block1_temp }}"
+      unique_id: "b5069678-dc2c-466e-8440-6c5737e41106"
+    
+    - name: "GeyserWise Max - Block 2 Temperature"
+      command_topic: "cmnd/geyser/block2"
+      command_template: "{{ value | int}}"
+      options:
+        - "30"
+        - "35"
+        - "40"
+        - "45"
+        - "50"
+        - "55"
+        - "60"
+        - "65"
+      state_topic: "stat/geyser/RESULT"
+      value_template: "{{ value_json.block2_temp }}"
+      unique_id: "93856ece-b8e8-4aaf-94c3-10319300bed7"
+    
+    - name: "GeyserWise Max - Block 3 Temperature"
+      command_topic: "cmnd/geyser/block3"
+      command_template: "{{ value | int}}"
+      options:
+        - "30"
+        - "35"
+        - "40"
+        - "45"
+        - "50"
+        - "55"
+        - "60"
+        - "65"
+      state_topic: "stat/geyser/RESULT"
+      value_template: "{{ value_json.block3_temp }}"
+      unique_id: "7507c945-6638-44e7-97a1-deee77be7559"
+    
+    - name: "GeyserWise Max - Block 4 Temperature"
+      command_topic: "cmnd/geyser/block4"
+      command_template: "{{ value | int}}"
+      options:
+        - "30"
+        - "35"
+        - "40"
+        - "45"
+        - "50"
+        - "55"
+        - "60"
+        - "65"
+      state_topic: "stat/geyser/RESULT"
+      value_template: "{{ value_json.block4_temp }}"
+      unique_id: "f790f6fe-2fa8-444c-9300-5af0c414b071"
+
+    - name: "GeyserWise Max - Anti Freeze Temperature"
+      command_topic: "cmnd/geyser/anti_freeze"
+      command_template: "{{ value | int}}"
+      options:
+        - "0"
+        - "1"
+        - "2"
+        - "3"
+        - "4"
+        - "5"
+        - "6"
+        - "7"
+        - "8"
+        - "9"
+        - "10"
+      state_topic: "stat/geyser/RESULT"
+      value_template: "{{ value_json.anti_freeze_temp }}"
+      unique_id: "a6bba61f-7238-4c56-9986-66d206e21b71"
+    
+    - name: "GeyserWise Max - Solar Diff"
+      command_topic: "cmnd/geyser/solar_diff"
+      command_template: "{{ value | int}}"
+      options:
+        - "7"
+        - "8"
+        - "9"
+        - "10"
+        - "11"
+        - "12"
+        - "13"
+        - "14"
+        - "15"
+      state_topic: "stat/geyser/RESULT"
+      value_template: "{{ value_json.solar_diff_temp }}"
+      unique_id: "9a0d7a0e-3ea1-4156-9cad-4a7bd1f56193"
+
+  climate:
+    - name: "GeyserWise Max"
+      current_temperature_topic: "stat/geyser/TEMP"
+      json_attributes_topic: "stat/geyser/RESULT"
+      max_temp: 65
+      min_temp: 30
+      temp_step: 5
+      precision: 1.0
+      temperature_command_topic: "cmnd/geyser/block1"
+      temperature_state_topic: "stat/geyser/RESULT"
+      temperature_state_template: "{{ value_json.block1_temp }}"
+      temperature_unit: C
+      mode_state_topic: "stat/geyser/POWER"
+      mode_state_template: >-
+        {% if value == "OFF" %}
+          off
+        {% else %}
+          heat
+        {% endif %}
+      mode_command_template: >-
+        {% if value == "off" %}
+          OFF
+        {% else %}
+          ON
+        {% endif %}
+      mode_command_topic: "cmnd/geyser/power"
+      modes:
+        - "off"
+        - "heat"
+      preset_modes:
+        - "away"
+        - "home"
+      preset_mode_command_topic: "cmnd/geyser/away"
+      preset_mode_value_template: >-
+        {% if value == "OFF" %}
+          home
+        {% else %}
+          away
+        {% endif %}
+      preset_mode_command_template: >-
+        {% if value == "away" %}
+          ON
+        {% else %}
+          OFF
+        {% endif %}
+      preset_mode_state_topic: "stat/geyser/AWAY"
+      unique_id: "d5cc3140-5f11-43d9-b8f5-d0dd8ca919b3"
