@@ -172,10 +172,6 @@ void setup() {
   loadConfigFile();
   setupWifiManager();
 
-  //Starts a web portal so that you can connect to your DHCP IP and still be able to upload new firmware or change wifi settings.
-  wifiManager.startWebPortal();
-  wifiManager.process();
-
   setTopic();
 }
 
@@ -185,6 +181,10 @@ void loop() {
   isWifiConnected();
 
   reconnectMqtt();
+
+  //Starts a web portal so that you can connect to your DHCP IP and still be able to upload new firmware or change wifi settings.
+  wifiManager.startWebPortal();
+  wifiManager.process();
 
   unsigned long currentQueryMillis = millis();
   if (currentQueryMillis - previousQueryMillis >= QUERY_INTERVAL_MS) {
