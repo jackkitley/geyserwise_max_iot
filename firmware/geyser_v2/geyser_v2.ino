@@ -47,6 +47,8 @@ WiFiClient espClient;
 PubSubClient client(espClient);
 WiFiManager wifiManager;
 
+int mqttRetryCount = 0;
+
 //String header;
 bool shouldSaveConfig = false;
 bool gotMCUResponse = false;
@@ -129,8 +131,14 @@ unsigned long previousHeartbeatMillis = 0;
 #define QUERY_INTERVAL_MS 1000
 unsigned long previousQueryMillis = 0;
 
-#define WIFI_CHECK_INTERVAL_MS 120000
+#define WIFI_CHECK_INTERVAL_MS 12000
 unsigned long previousWifiCheckMillis = 0;
+
+WiFiManagerParameter *custom_mqtt_server;
+WiFiManagerParameter *custom_mqtt_port;
+WiFiManagerParameter *custom_mqtt_user;
+WiFiManagerParameter *custom_mqtt_pass;
+WiFiManagerParameter *custom_mqtt_topic;
 
 struct TuyaCommand {
   uint16_t header;
@@ -203,7 +211,7 @@ void loop() {
   bool haveMessage = readCommand();
 
   //Checks to see if any messages come through
-  if (haveMessage) {
+  if (haveMessage && WiFi.status() == WL_CONNECTED) {
     Serial.println("Read Command:");
     Serial.println(command_.command);
 
@@ -222,10 +230,12 @@ void loop() {
 
       // checksumStore = command_.checksum;
       // }
-    } else if (command_.command == TUYA_PAIRING_MODE || command_.command == TUYA_PAIRING_MODE_OPTION) {
-      wifiManager.resetSettings();
-      ESP.restart();
     }
+  }
+
+  if (command_.command == TUYA_PAIRING_MODE || command_.command == TUYA_PAIRING_MODE_OPTION) {
+    wifiManager.resetSettings();
+    ESP.restart();
   }
 
   digitalWrite(LED_BUILTIN, LOW);
@@ -564,24 +574,20 @@ void setAndPublishGeyserData(const uint8_t *geyserValues) {
 
 void publishGeyserTemps(const uint8_t *geyserValues) {
   geyserTemp = geyserValues[17];
-  if ((previousGeyserTemp - geyserTemp) < 3) {
+  if (previousGeyserTemp > 0 && geyserTemp > 0 && (previousGeyserTemp - geyserTemp) < 3) {
     char tempAsString[32] = { 0 };
     snprintf(tempAsString, sizeof(tempAsString), "%d", geyserTemp);
     client.publish(temp_topic, tempAsString);
-  }
-
-  if (previousGeyserTemp != geyserTemp) {
+  } else {
     previousGeyserTemp = geyserTemp;
   }
 
   collectorTemp = geyserValues[89];
-  if ((previousCollectorTemp - collectorTemp) < 3) {
+  if (previousCollectorTemp > 0 && collectorTemp > 0 && (previousCollectorTemp - collectorTemp) < 3) {
     char collectorTempAsString[32] = { 0 };
     snprintf(collectorTempAsString, sizeof(collectorTempAsString), "%d", collectorTemp);
     client.publish(collector_temp_topic, collectorTempAsString);
-  }
-
-  if (previousCollectorTemp != collectorTemp) {
+  } else {
     previousCollectorTemp = collectorTemp;
   }
 }
@@ -612,11 +618,18 @@ void reconnectMqtt() {
       } else {
         Serial.println("Failed to connect to MQTT");
         Serial.println(" try again in 5 seconds");
-        // Wait 5 seconds before retrying
+        Serial.println("MQTT Count:");
+        Serial.println(mqttRetryCount);
+
         delay(5000);
+        mqttRetryCount++;
+
+        if (mqttRetryCount == 50) {
+          Serial.println("Reached maximum MQTT retry count. Resetting WiFi settings and restarting.");
+          wifiManager.resetSettings();
+          ESP.restart();
+        }
       }
-    } else {
-      delay(5000);
     }
   }
   client.loop();
