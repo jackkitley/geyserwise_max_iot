@@ -26,7 +26,8 @@ When the device starts up, it will be in AP mode. Join this wifi device, and it 
  - Set your home Wifi details
  - Set your MQTT server (home assistant mosquitto for example)
 
-![a9702b9e7a9399120115262e955376e57db9ed7b](https://user-images.githubusercontent.com/3243014/183018758-35b827db-b694-406e-9929-b5eb52ad24b9.jpeg)
+![WhatsApp Image 2023-08-01 at 13 34 40](https://github.com/jackkitley/geyserwise_max_iot/assets/3243014/5daa23f5-4af0-4123-aa0b-74325ca01ed5)
+
 
 Once it successfully connects to your MQTT server, you should be able to see the device on your network. 
 
