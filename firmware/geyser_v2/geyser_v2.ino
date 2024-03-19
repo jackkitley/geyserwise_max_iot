@@ -348,6 +348,8 @@ uint8_t checksum() {
 
 const char *errorCode(int error) {
   switch (error) {
+    case 256:
+      return "E9";  //PV Pump failure
     case 128:
       return "E8";  //Collector probe error
     case 64:
