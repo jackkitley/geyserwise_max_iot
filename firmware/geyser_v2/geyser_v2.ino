@@ -47,8 +47,6 @@ WiFiClient espClient;
 PubSubClient client(espClient);
 WiFiManager wifiManager;
 
-int mqttRetryCount = 0;
-
 //String header;
 bool shouldSaveConfig = false;
 bool gotMCUResponse = false;
@@ -412,7 +410,7 @@ void setupWifiManager() {
   bool res;
 
   wifiManager.setConnectTimeout(180);
-  wifiManager.setConnectRetries(100);
+  wifiManager.setConnectRetries(200);
   if (wifiManager.getWiFiIsSaved()) wifiManager.setEnableConfigPortal(false);
   res = wifiManager.autoConnect("AP_GEYSER");
 
@@ -620,17 +618,8 @@ void reconnectMqtt() {
       } else {
         Serial.println("Failed to connect to MQTT");
         Serial.println(" try again in 5 seconds");
-        Serial.println("MQTT Count:");
-        Serial.println(mqttRetryCount);
 
         delay(5000);
-        mqttRetryCount++;
-
-        if (mqttRetryCount == 50) {
-          Serial.println("Reached maximum MQTT retry count. Resetting WiFi settings and restarting.");
-          wifiManager.resetSettings();
-          ESP.restart();
-        }
       }
     }
   }
